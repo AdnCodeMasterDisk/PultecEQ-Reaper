@@ -69,12 +69,12 @@ function stattslider() (
 
   freq1 = (slider2 == 0 ? 20 : (slider2 == 1 ? 40 : (slider2 == 2 ? 60 : (slider2 == 3 ? 100 : 200))));
 
-  a1 = (10^(slider4/40));
+  a1 = (10^(slider4/ 40));
   q1 = slider3;
   w01 = 2 * $pi * freq1/srate;
   cosw01 = cos(w01);
   sinw01 = sin(w01);
-  alpha1 = sinw01 / (2 * q1);
+  alpha1 = sinw01 / ( 2 * q1);
 
   b01 = 1 + alpha1 * a1;
   b11 = -2 * cosw01;
@@ -173,7 +173,7 @@ function stattslider() (
   spl1 += cDcAdd;
 
 
-  slider4 != 0 && freq1 != 0 ? (
+  slider4 != 0 && 20 != 0 ? (
   ospl0 = spl0;
   spl0 = b01 * spl0 + b11 * xl11 + b21 * xl21 - a11 * yl11 - a21 * yl21;
   xl21 = xl11;
@@ -221,7 +221,7 @@ function stattslider() (
   yr15 = spl1;
   );
 
-  slider13 && freq2 != 0 ? (
+  slider13 && 2000 != 0 ? (
   ospl0 = spl0;
   spl0 = b07 * spl0 + b17 * xl17 + b27 * xl27 - a17 * yl17 - a27 * yl27;
   xl27 = xl17;
