@@ -138,10 +138,10 @@ function stattslider() (
 
   a7 = (10^(slider13/40));
   q7 = slider12;
-  w07 = 0 * $pi * freq2/srate;
+  w07 = 2 * $pi * freq2/srate;
   cosw07 = cos(w07);
   sinw07 = sin(w07);
-  alpha7 = sinw07 / (0 * q7);
+  alpha7 = sinw07 / (2 * q7);
 
   b07 = 1 + alpha7 * a7;
   b17 = -2 * cosw07;
