@@ -4,7 +4,7 @@ desc:PultecESFR [CausticAudio]
 
 slider2:1<1,5,1{20,40,60,100,200}>-Frequency Low (Hz)
 slider3:1<0.1,3,0.1->-BandWidth
-slider4:0<-24,24,0.5>-Booster
+slider4:0<0,24,0.5>-Booster
 slider6:1<.5,10,0.1>-Q 2 // forever hide
 slider7:0<-24,0,0.5>-Atenuation Low
 slider9:0.9<.5,10,0.1>-Q 3 // forever hide
@@ -32,7 +32,7 @@ filename:3,SelectHiKnob.png
   ext_tail_size = -1;
   drag1 = 0;
   old_mouse_y1 = 0;
-  guiNeedsUpdate = 1; 
+  //guiNeedsUpdate = 1; 
 
 function bkg(wImg, hImg, indImg) (
     gfx_a = 1;
@@ -53,27 +53,19 @@ function knob(x, y, png_size, minVal, MaxVal, frames, valider, file, scaling) (
 );
 
 function stattslider() ( 
-  gain = 10^(2/20);
+  gain = 1.15; 
 
-  a0 = 1;
-  s0 = 1;
-  q0 = 1 / (sqrt((a0 + 1/a0)*(1/s0 - 1) + 2));
-  w00 = 0 * $pi * 1/srate;
-  cosw00 = cos(w00);
-  sinw00 = sin(w00);
-  alpha0 = sinw00 / (0.3* q0);
-
-  b00 = (1 + cosw00)/2;
-  b10 = -(1 + cosw00);
-  b20 = (1 + cosw00)/2;
-  a00 = 1 + alpha0;
-  a10 = -2 * cosw00;
-  a20 = 1 - alpha0;
-  b00 /= a00;
-  b10 /= a00;
-  b20 /= a00;
-  a10 /= a00;
-  a20 /= a00;
+  b00 = 0.5;
+  b10 = -0.0001;
+  b20 = 0.8;
+  a00 =0.4;
+  a10 = 0.005;
+  a20 = 0.625; 
+  b00 /= 1;
+  b10 /= 1;
+  b20 /= 1;
+  a10 /= 1;
+  a20 /= 1;
 
   freq1 = (slider2 == 0 ? 20 : (slider2 == 1 ? 40 : (slider2 == 2 ? 60 : (slider2 == 3 ? 100 : 200))));
 
@@ -141,7 +133,7 @@ function stattslider() (
   w07 = 2 * $pi * freq2/srate;
   cosw07 = cos(w07);
   sinw07 = sin(w07);
-  alpha7 = sinw07 / (2 * q7);
+  alpha7 = sinw07 / ( 2 * q7);
 
   b07 = 1 + alpha7 * a7;
   b17 = -2 * cosw07;
@@ -156,25 +148,19 @@ function stattslider() (
   a27 /= a07;
 
 
-  a9 = 1;
-  s9 = 2;
-  q9 = 1 / (sqrt((a9 + 1/a9)*(1/s9 - 1) + 2));
-  w09 = 2 * $pi * 22000/srate;
-  cosw09 = cos(w09);
-  sinw09 = sin(w09);
-  alpha9 = sinw09 / (1.2 * q9);
 
-  b09 = (1 - cosw09)/2;
-  b19 = (1 - cosw09);
-  b29 = (1 - cosw09)/2;
-  a09 = 1 + alpha9;
-  a19 = -2 * cosw09;
-  a29 = 1 - alpha9;
+  b09 = 0.5;
+  b19 = -0.0001;
+  b29 = 0.8;
+  a09 =0.4;
+  a19 = 0.005;
+  a29 = 0.625;
   b09 /= a09;
   b19 /= a09;
   b29 /= a09;
   a19 /= a09;
   a29 /= a09;
+  
  );
 
 @slider
@@ -182,22 +168,6 @@ function stattslider() (
   
 @sample
  
-  0.3 != 0 ? (
-  ospl0 = spl0;
-  spl0 = b00 * spl0 + b10 * xl10 + b20 * xl20 - a10 * yl10 - a20 * yl20;
-  xl20 = xl10;
-  xl10 = ospl0;
-  yl20 = yl10;
-  yl10 = abs(spl0) < cDenorm ? 0 : spl0;
-
-  ospl1 = spl1;
-  spl1 = b00 * spl1 + b10 * xr10 + b20 * xr20 - a10 * yr10 - a20 * yr20;
-  xr20 = xr10;
-  xr10 = ospl1;
-  yr20 = yr10;
-  yr10 = abs(spl1) < cDenorm ? 0 : spl1;
-  );
-
 
   spl0 += cDcAdd;
   spl1 += cDcAdd;
@@ -219,7 +189,7 @@ function stattslider() (
   yr11 = spl1;
   );
 
-  slider7 && ( (freq1 / slider3) + ( 300 * slider3) ) != 0 ? (
+  slider7 && ( (20 / slider3) + ( 300 * slider3) ) != 0 ? (
   ospl0 = spl0;
   spl0 = b03 * spl0 + b13 * xl13 + b23 * xl23 - a13 * yl13 - a23 * yl23;
   xl23 = xl13;
@@ -235,7 +205,7 @@ function stattslider() (
   yr13 = spl1;
   );
 
-  slider10 &&  ( (freq2 * slider12) - ( 1100 * slider12) ) != 0 ? (
+  slider10 &&  ( (1000  * slider12) - ( 1100 * slider12) ) != 0 ? (
   ospl0 = spl0;
   spl0 = b05 * spl0 + b15 * xl15 + b25 * xl25 - a15 * yl15 - a25 * yl25;
   xl25 = xl15;
@@ -267,22 +237,6 @@ function stattslider() (
   yr17 = spl1;
   );
 
-
-  22000 != 22000 ? (
-  ospl0 = spl0;
-  spl0 = b09 * spl0 + b19 * xl19 + b29 * xl29 - a19 * yl19 - a29 * yl29;
-  xl29 = xl19;
-  xl19 = ospl0;
-  yl29 = yl19;
-  yl19 = spl0;
-
-  ospl1 = spl1;
-  spl1 = b09 * spl1 + b19 * xr19 + b29 * xr29 - a19 * yr19 - a29 * yr29;
-  xr29 = xr19;
-  xr19 = ospl1;
-  yr29 = yr19;
-  yr19 = spl1;
-  );
 
   spl0 *= gain;
   spl1 *= gain;
