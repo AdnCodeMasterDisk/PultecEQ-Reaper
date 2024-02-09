@@ -1,0 +1,672 @@
+desc:PultecRFRQ - Light - CausticAudio
+desc:PultecRFRQ - Light - [CausticAudio]
+
+slider1:0<0,400,5>-HPF (Hz)
+slider2:20<19,300,1>-Frequency Low (Hz)
+slider3:1<0.1,3,0.1->-BandWidth
+slider4:0<0,24,0.5>-Booster
+slider6:1<.5,10,0.1>-Q 2 // forever hide
+slider7:0<-24,0,0.5>-Atenuation Low
+slider9:0.9<.5,10,0.1>-Q 3 // forever hide
+slider10:0<-24,0,0.5>-Ateniation hi
+slider11:1000<1000,20000,1>-Frequency Hi (kz)
+slider12:1<0.1,2.9,0.1>-BandWidth
+slider13:0<-18,18,0.5>-Booster
+slider14:22000<400,22000,5>-LPF (Hz)
+slider15:0<-12,12,0.5>-Output Gain (dB)
+
+options: no_meter
+
+  
+in_pin:left input
+in_pin:right input  
+out_pin:left output
+out_pin:right output
+
+filename:0,pultecbackRFRQ.png
+filename:1,knobpultec.png
+
+
+
+@init
+  cDcAdd = 10^-30;
+  cDenorm = 10^-30;
+  ext_tail_size = -1;
+  drag1 = 0;
+  old_mouse_y1 = 0;
+  guiNeedsUpdate = 1; 
+  
+function bkg(wImg, hImg, indImg) (
+    gfx_a = 1;
+    coords[0] = coords[4] = 0;
+    coords[1] = coords[5] = 0;
+    coords[2] = coords[6] = wImg;
+    coords[3] = coords[7] = hImg;
+    gfx_blitext(indImg, coords, 0);
+);
+
+function knob(x, y, png_size, minVal, MaxVal, frames, valider, file, scaling) (
+    gfx_x = x; 
+    gfx_y = y;
+    weg = abs(minVal - MaxVal);
+    kframe = (slider(valider) - minVal) * (frames - 1) / (MaxVal - minVal);
+    source_y = png_size * floor(kframe);
+    gfx_blit(file, scaling, 0, 0, source_y, png_size, png_size);
+);
+
+
+
+function stattslider() (
+  
+  gain = 10^(slider15/20); 
+  a0 = 1;
+  s0 = 1;
+  q0 = 1 / (sqrt((a0 + 1/a0)*(1/s0 - 1) + 2));
+  w00 = 2 * $pi * slider1/srate;
+  cosw00 = cos(w00);
+  sinw00 = sin(w00);
+  alpha0 = sinw00 / (2 * q0);
+
+  b00 = (1 + cosw00)/2;
+  b10 = -(1 + cosw00);
+  b20 = (1 + cosw00)/2;
+  a00 = 1 + alpha0;
+  a10 = -2 * cosw00;
+  a20 = 1 - alpha0;
+  b00 /= a00;
+  b10 /= a00;
+  b20 /= a00;
+  a10 /= a00;
+  a20 /= a00;
+
+  a1 = (10^(slider4/40));
+  q1 = slider3;
+  w01 = 2 * $pi * slider2/srate;
+  cosw01 = cos(w01);
+  sinw01 = sin(w01);
+  alpha1 = sinw01 / (2 * q1);
+
+  b01 = 1 + alpha1 * a1;
+  b11 = -2 * cosw01;
+  b21 = 1 - alpha1 * a1;
+  a01 = 1 + alpha1 / a1;
+  a11 = -2 * cosw01;
+  a21 = 1 - alpha1 / a1;
+  b01 /= a01;
+  b11 /= a01;
+  b21 /= a01;
+  a11 /= a01;
+  a21 /= a01;
+
+  a3 = (10^(slider7/40));
+  q3 = slider6;
+  w03 = 2 * $pi * ( (slider2 / slider3) + ( 300 * slider3) )/srate;
+  cosw03 = cos(w03);
+  sinw03 = sin(w03);
+  alpha3 = sinw03 / (2 * q3);
+
+  b03 = 1 + alpha3 * a3;
+  b13 = -2 * cosw03;
+  b23 = 1 - alpha3 * a3;
+  a03 = 1 + alpha3 / a3;
+  a13 = -2 * cosw03;
+  a23 = 1 - alpha3 / a3;
+  b03 /= a03;
+  b13 /= a03;
+  b23 /= a03;
+  a13 /= a03;
+  a23 /= a03;
+
+  a5 = (10^(slider10/40));
+  q5 = slider9;
+  w05 = 2 * $pi * ( (slider11 * slider12) - ( 10 * slider12) )/srate;
+  cosw05 = cos(w05);
+  sinw05 = sin(w05);
+  alpha5 = sinw05 / (2 * q5);
+
+  b05 = 1 + alpha5 * a5;
+  b15 = -2 * cosw05;
+  b25 = 1 - alpha5 * a5;
+  a05 = 1 + alpha5 / a5;
+  a15 = -2 * cosw05;
+  a25 = 1 - alpha5 / a5;
+  b05 /= a05;
+  b15 /= a05;
+  b25 /= a05;
+  a15 /= a05;
+  a25 /= a05;
+
+  a7 = (10^(slider13/40));
+  q7 = slider12;
+  w07 = 2 * $pi * slider11/srate;
+  cosw07 = cos(w07);
+  sinw07 = sin(w07);
+  alpha7 = sinw07 / (2 * q7);
+
+  b07 = 1 + alpha7 * a7;
+  b17 = -2 * cosw07;
+  b27 = 1 - alpha7 * a7;
+  a07 = 1 + alpha7 / a7;
+  a17 = -2 * cosw07;
+  a27 = 1 - alpha7 / a7;
+  b07 /= a07;
+  b17 /= a07;
+  b27 /= a07;
+  a17 /= a07;
+  a27 /= a07;
+
+
+  a9 = 1;
+  s9 = 2;
+  q9 = 1 / (sqrt((a9 + 1/a9)*(1/s9 - 1) + 2));
+  w09 = 2 * $pi * slider14/srate;
+  cosw09 = cos(w09);
+  sinw09 = sin(w09);
+  alpha9 = sinw09 / (2 * q9);
+
+  b09 = (1 - cosw09)/2;
+  b19 = (1 - cosw09);
+  b29 = (1 - cosw09)/2;
+  a09 = 1 + alpha9;
+  a19 = -2 * cosw09;
+  a29 = 1 - alpha9;
+  b09 /= a09;
+  b19 /= a09;
+  b29 /= a09;
+  a19 /= a09;
+  a29 /= a09;
+ );
+
+@slider
+  stattslider();
+          
+          
+@sample
+  
+  slider1 != 0 ? (
+  ospl0 = spl0;
+  spl0 = b00 * spl0 + b10 * xl10 + b20 * xl20 - a10 * yl10 - a20 * yl20;
+  xl20 = xl10;
+  xl10 = ospl0;
+  yl20 = yl10;
+  yl10 = abs(spl0) < cDenorm ? 0 : spl0;
+
+  ospl1 = spl1;
+  spl1 = b00 * spl1 + b10 * xr10 + b20 * xr20 - a10 * yr10 - a20 * yr20;
+  xr20 = xr10;
+  xr10 = ospl1;
+  yr20 = yr10;
+  yr10 = abs(spl1) < cDenorm ? 0 : spl1;
+  );
+
+
+  spl0 += cDcAdd;
+  spl1 += cDcAdd;
+
+
+  slider4 != 0 && slider2 != 0 ? (
+  ospl0 = spl0;
+  spl0 = b01 * spl0 + b11 * xl11 + b21 * xl21 - a11 * yl11 - a21 * yl21;
+  xl21 = xl11;
+  xl11 = ospl0;
+  yl21 = yl11;
+  yl11 = spl0;
+
+  ospl1 = spl1;
+  spl1 = b01 * spl1 + b11 * xr11 + b21 * xr21 - a11 * yr11 - a21 * yr21;
+  xr21 = xr11;
+  xr11 = ospl1;
+  yr21 = yr11;
+  yr11 = spl1;
+  );
+
+  slider7 && ( (slider2 / slider3) + ( 300 * slider3) ) != 0 ? (
+  ospl0 = spl0;
+  spl0 = b03 * spl0 + b13 * xl13 + b23 * xl23 - a13 * yl13 - a23 * yl23;
+  xl23 = xl13;
+  xl13 = ospl0;
+  yl23 = yl13;
+  yl13 = spl0;
+
+  ospl1 = spl1;
+  spl1 = b03 * spl1 + b13 * xr13 + b23 * xr23 - a13 * yr13 - a23 * yr23;
+  xr23 = xr13;
+  xr13 = ospl1;
+  yr23 = yr13;
+  yr13 = spl1;
+  );
+
+  slider10 &&  ( (slider11 * slider12) - ( 10 * slider12) ) != 0 ? (
+  ospl0 = spl0;
+  spl0 = b05 * spl0 + b15 * xl15 + b25 * xl25 - a15 * yl15 - a25 * yl25;
+  xl25 = xl15;
+  xl15 = ospl0;
+  yl25 = yl15;
+  yl15 = spl0;
+
+  ospl1 = spl1;
+  spl1 = b05 * spl1 + b15 * xr15 + b25 * xr25 - a15 * yr15 - a25 * yr25;
+  xr25 = xr15;
+  xr15 = ospl1;
+  yr25 = yr15;
+  yr15 = spl1;
+  );
+
+  slider13 && slider11 != 0 ? (
+  ospl0 = spl0;
+  spl0 = b07 * spl0 + b17 * xl17 + b27 * xl27 - a17 * yl17 - a27 * yl27;
+  xl27 = xl17;
+  xl17 = ospl0;
+  yl27 = yl17;
+  yl17 = spl0;
+
+  ospl1 = spl1;
+  spl1 = b07 * spl1 + b17 * xr17 + b27 * xr27 - a17 * yr17 - a27 * yr27;
+  xr27 = xr17;
+  xr17 = ospl1;
+  yr27 = yr17;
+  yr17 = spl1;
+  );
+
+
+  slider14 != 22000 ? (
+  ospl0 = spl0;
+  spl0 = b09 * spl0 + b19 * xl19 + b29 * xl29 - a19 * yl19 - a29 * yl29;
+  xl29 = xl19;
+  xl19 = ospl0;
+  yl29 = yl19;
+  yl19 = spl0;
+
+  ospl1 = spl1;
+  spl1 = b09 * spl1 + b19 * xr19 + b29 * xr29 - a19 * yr19 - a29 * yr29;
+  xr29 = xr19;
+  xr19 = ospl1;
+  yr29 = yr19;
+  yr19 = spl1;
+  );
+
+
+  spl0 *= gain;
+  spl1 *= gain;
+  
+
+
+@gfx 850 300
+// Ahora, dentro de @gfx, solo llamamos a las funciones si es necesario
+  bkg(850, 300, 0); 
+ // Asegurarte de que el tamaño de la ventana gfx sea al menos 850x300
+  (gfx_w < 850) ? (gfx_w = 850);
+  (gfx_h < 300) ? (gfx_h = 300);   
+  
+  // Configuración Global para knobs
+      knob_speed = 0.2;
+      png_size = 120;
+      knob_frames = 99;
+      knob_scaling = 0.76;
+// KNBOS:
+// KNBOS:
+// knob 1 lowfilter
+knob_x1 = 37;
+knob_y1 = 54;
+knob_speed1 = 1.5;
+knob_min1 = 0;
+knob_max1 = 400;
+knob_slider1 = 1;
+knob_scaling1 = 0.56;
+
+knob(knob_x1, knob_y1, png_size, knob_min1, knob_max1, knob_frames, knob_slider1, 1, knob_scaling1);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x1 ? (
+        mouse_x < knob_x1 + png_size * knob_scaling ? (
+            mouse_y > knob_y1 ? (
+                mouse_y < knob_y1 + png_size * knob_scaling ? (
+                    drag1 == 0 ? (old_mouse_y1 = mouse_y; drag1 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag1 == 1 ? (
+    new_position1 = slider(knob_slider1) + (old_mouse_y1 - mouse_y) * knob_speed1;
+    old_mouse_y1 = mouse_y;
+    slider(knob_slider1) = min(max(new_position1, knob_min1), knob_max1);
+    slider_automate(knob_slider1);
+    stattslider();
+);
+
+mouse_cap == 0 ? drag1 = 0;
+
+// KNOB 2 booster 
+knob_x2 = 155;
+knob_y2 = 37;
+knob_min2 = -24;
+knob_max2 =20;
+knob_slider2 = 4;
+
+knob(knob_x2, knob_y2, png_size, knob_min2, knob_max2, knob_frames, knob_slider2, 1, knob_scaling);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x2 ? (
+        mouse_x < knob_x2 + png_size * knob_scaling ? (
+            mouse_y > knob_y2 ? (
+                mouse_y < knob_y2 + png_size * knob_scaling ? (
+                    drag2 == 0 ? (old_mouse_y2 = mouse_y; drag2 = 1);
+                    
+                );
+            );
+        );
+    );
+);
+
+drag2 == 1 ? (
+    new_position2 = slider(knob_slider2) + (old_mouse_y2 - mouse_y) * knob_speed;
+    old_mouse_y2 = mouse_y;
+    slider(knob_slider2) = min(max(new_position2, knob_min3), knob_max2);
+    slider_automate(knob_slider2);
+    stattslider();
+);
+
+mouse_cap == 0 ? drag2 = 0;
+
+
+// KNOB 3 - aten
+knob_x3 = 295;
+knob_y3 = 37;
+knob_min3 = -24;
+knob_max3 =0;
+knob_slider3 = 7;
+
+
+knob(knob_x3, knob_y3, png_size, knob_min3, knob_max3, knob_frames, knob_slider3, 1, knob_scaling);
+
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x3 ? (
+        mouse_x < knob_x3 + png_size * knob_scaling ? (
+            mouse_y > knob_y3 ? (
+                mouse_y < knob_y3 + png_size * knob_scaling ? (
+                    drag3 == 0 ? (old_mouse_y3 = mouse_y; drag3 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag3 == 1 ? (
+    new_position3 = slider(knob_slider3) + (old_mouse_y3 - mouse_y) * knob_speed;
+    old_mouse_y3 = mouse_y;
+    slider(knob_slider3) = min(max(new_position3, knob_min3), knob_max3);
+    slider_automate(knob_slider3);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag3 = 0;
+
+
+// KNOB 4 - bandwith
+knob_x4 = 225;
+knob_y4 = 173;
+knob_min4 = 0.1;
+knob_max4 = 1;
+knob_slider4 = 3;
+knob_speed4 = 0.005;
+
+knob(knob_x4, knob_y4, png_size, knob_min4, knob_max4, knob_frames, knob_slider4, 1, knob_scaling);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x4 ? (
+        mouse_x < knob_x4 + png_size * knob_scaling ? (
+            mouse_y > knob_y4 ? (
+                mouse_y < knob_y4 + png_size * knob_scaling ? (
+                    drag4 == 0 ? (old_mouse_y4 = mouse_y; drag4 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag4 == 1 ? (
+    new_position4 = slider(knob_slider4) + (old_mouse_y4 - mouse_y) * knob_speed4;
+    old_mouse_y4 = mouse_y;
+    slider(knob_slider4) = min(max(new_position4, knob_min4), knob_max4);
+    slider_automate(knob_slider4);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag4 = 0;
+
+
+// KNOB 5 - LowFrecuencis
+knob_x5 = 102;
+knob_y5 = 179;
+png_size5 = 120;
+knob_min5 = 20;
+knob_max5 = 300;
+knob_frames5 = 99;
+knob_slider5 = 2;
+knob_speed5 =3;
+knob_scaling5 = 0.56;
+
+knob(knob_x5, knob_y5, png_size5, knob_min5, knob_max5, knob_frames5, knob_slider5, 1, knob_scaling5);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x5 ? (
+        mouse_x < knob_x5 + png_size * knob_scaling ? (
+            mouse_y > knob_y5 ? (
+                mouse_y < knob_y5 + png_size * knob_scaling ? (
+                    drag5 == 0 ? (old_mouse_y5 = mouse_y; drag5 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag5 == 1 ? (
+    new_position5 = slider(knob_slider5) + (old_mouse_y5 - mouse_y) * knob_speed5;
+    old_mouse_y5 = mouse_y;
+    slider(knob_slider5) = min(max(new_position5, knob_min5), knob_max5);
+    slider_automate(knob_slider5);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag5 = 0;
+
+// KNOB 6 - aten hi
+knob_x6 = 458;
+knob_y6 = 37;
+knob_min6 = -10;
+knob_max6 = 0;
+knob_slider6 = 10;
+knob_speed6 = 0.15;
+
+knob(knob_x6, knob_y6, png_size, knob_min6, knob_max6, knob_frames, knob_slider6, 1, knob_scaling);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x6 ? (
+        mouse_x < knob_x6 + png_size * knob_scaling ? (
+            mouse_y > knob_y6 ? (
+                mouse_y < knob_y6 + png_size * knob_scaling ? (
+                    drag6 == 0 ? (old_mouse_y6 = mouse_y; drag6 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag6 == 1 ? (
+    new_position6 = slider(knob_slider6) + (old_mouse_y6 - mouse_y) * knob_speed6;
+    old_mouse_y6 = mouse_y;
+    slider(knob_slider6) = min(max(new_position6, knob_min6), knob_max6);
+    slider_automate(knob_slider6);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag6 = 0;
+
+// KNOB 7 - Boost hi
+knob_x7 = 600;
+knob_y7 = 37;
+knob_min7 = -18;
+knob_max7 = 18;
+knob_slider7 = 13;
+knob_speed7 = 0.12;
+
+knob(knob_x7, knob_y7, png_size, knob_min7, knob_max7, knob_frames, knob_slider7, 1, knob_scaling);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x7 ? (
+        mouse_x < knob_x7 + png_size * knob_scaling ? (
+            mouse_y > knob_y7 ? (
+                mouse_y < knob_y7 + png_size * knob_scaling ? (
+                    drag7 == 0 ? (old_mouse_y7 = mouse_y; drag7 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag7 == 1 ? (
+    new_position7 = slider(knob_slider7) + (old_mouse_y7 - mouse_y) * knob_speed7;
+    old_mouse_y7 = mouse_y;
+    slider(knob_slider7) = min(max(new_position7, knob_min7), knob_max7);
+    slider_automate(knob_slider7);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag7 = 0;
+
+// KNOB 8 - bandwith hi
+knob_x8 = 535;
+knob_y8 = 173;
+knob_min8 = 0.1;
+knob_max8 = 1;
+knob_slider8 = 12;
+knob_speed8 = 0.012;
+
+knob(knob_x8, knob_y8, png_size, knob_min8, knob_max8, knob_frames, knob_slider8, 1, knob_scaling);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x8 ? (
+        mouse_x < knob_x8 + png_size * knob_scaling ? (
+            mouse_y > knob_y8 ? (
+                mouse_y < knob_y8 + png_size * knob_scaling ? (
+                    drag8 == 0 ? (old_mouse_y8 = mouse_y; drag8 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag8 == 1 ? (
+    new_position8 = slider(knob_slider8) + (old_mouse_y8 - mouse_y) * knob_speed8;
+    old_mouse_y8 = mouse_y;
+    slider(knob_slider8) = min(max(new_position8, knob_min8), knob_max8);
+    slider_automate(knob_slider8);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag8 = 0;
+
+// knob 9 hifilter
+knob_x9 =749;
+knob_y9 = 54;
+knob_speed9 = 80;
+knob_min9 = 400;
+knob_max9 = 22000;
+knob_slider9 = 14;
+knob_scaling9 = 0.56;
+
+knob(knob_x9, knob_y9, png_size, knob_min9, knob_max9, knob_frames, knob_slider9, 1, knob_scaling9);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x9 ? (
+        mouse_x < knob_x9 + png_size * knob_scaling9 ? (
+            mouse_y > knob_y9 ? (
+                mouse_y < knob_y9 + png_size * knob_scaling9 ? (
+                    drag9 == 0 ? (old_mouse_y9 = mouse_y; drag9 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag9 == 1 ? (
+    new_position9 = slider(knob_slider9) + (old_mouse_y9 - mouse_y) * knob_speed9;
+    old_mouse_y9 = mouse_y;
+    slider(knob_slider9) = min(max(new_position9, knob_min9), knob_max9);
+    slider_automate(knob_slider9);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag9 = 0;
+
+
+// KNOB 10 - hiFrecuencis
+knob_x10 = 695;
+knob_y10 = 179;
+png_size10 = 120;
+knob_min10 = 1000;
+knob_max10 = 19000;
+knob_frames10 = 99;
+knob_slider10 = 11;
+knob_speed10 = 80;
+knob_scaling10 = 0.56;
+
+knob(knob_x10, knob_y10, png_size10, knob_min10, knob_max10, knob_frames10, knob_slider10, 1, knob_scaling10);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x10 ? (
+        mouse_x < knob_x10 + png_size10 * knob_scaling10 ? (
+            mouse_y > knob_y10 ? (
+                mouse_y < knob_y10 + png_size10 * knob_scaling10 ? (
+                    drag10 == 0 ? (old_mouse_y10 = mouse_y; drag10 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag10 == 1 ? (
+    new_position10 = slider(knob_slider10) + (old_mouse_y10 - mouse_y) *  knob_speed10 ;
+    old_mouse_y10 = mouse_y;
+    slider(knob_slider10) = min(max(new_position10, knob_min10), knob_max10);
+    slider_automate(knob_slider10);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag10 = 0;
+
+// KNOB 11 - Gain
+knob_x11 = 389;
+knob_y11 = 177;
+knob_speed11 = 0.3;
+knob_min11 = -10;
+knob_max11 = 10;
+knob_slider11 = 15;
+knob_scaling11 = 0.56;
+
+knob(knob_x11, knob_y11, png_size, knob_min11, knob_max11, knob_frames, knob_slider11, 1, knob_scaling11);
+
+mouse_cap == 1 ? (
+    mouse_x > knob_x11 ? (
+        mouse_x < knob_x11 + png_size * knob_scaling11 ? (
+            mouse_y > knob_y11 ? (
+                mouse_y < knob_y11 + png_size * knob_scaling11 ? (
+                    drag11 == 0 ? (old_mouse_y11 = mouse_y; drag11 = 1);
+                );
+            );
+        );
+    );
+);
+
+drag11 == 1 ? (
+    new_position11 = slider(knob_slider11) + (old_mouse_y11 - mouse_y) * knob_speed11;
+    old_mouse_y11 = mouse_y;
+    slider(knob_slider11) = min(max(new_position11, knob_min11), knob_max11);
+    slider_automate(knob_slider11);
+     stattslider();
+);
+
+mouse_cap == 0 ? drag11 = 0;
